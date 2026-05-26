@@ -114,7 +114,7 @@ export const NavbarSection = ({ logo, links, sectionBg }: Record<string, string>
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
-export const HeroSection = ({ heading, subtext, badge, cta, ctaSecondary, sectionBg }: Record<string, string>) => {
+export const HeroSection = ({ heading, subtext, badge, cta, ctaSecondary, image, sectionBg }: Record<string, string>) => {
   const theme = useContext(ThemeContext);
   return (
     <section style={{ background: sectionBg || undefined }} className="flex items-center gap-12 px-10 py-16 bg-white">
@@ -147,8 +147,8 @@ export const HeroSection = ({ heading, subtext, badge, cta, ctaSecondary, sectio
           ))}
         </div>
       </div>
-      <div className="shrink-0 w-72 h-72 bg-gray-50 rounded-3xl border border-gray-100 flex items-center justify-center">
-        <div className="w-44 h-44 rounded-2xl bg-gray-200" />
+      <div className="shrink-0 w-72 h-72 bg-gray-50 rounded-3xl border border-gray-100 flex items-center justify-center overflow-hidden">
+        {image ? <img src={image} className="w-full h-full object-cover" /> : <div className="w-44 h-44 rounded-2xl bg-gray-200" />}
       </div>
     </section>
   );
@@ -274,12 +274,12 @@ export const TestimonialsSection = ({ heading, sectionBg }: Record<string, strin
 
 // ─── About ────────────────────────────────────────────────────────────────────
 
-export const AboutSection = ({ heading, body, imagePosition, sectionBg }: Record<string, string>) => {
+export const AboutSection = ({ heading, body, imagePosition, image, sectionBg }: Record<string, string>) => {
   const theme = useContext(ThemeContext);
   const imgRight = imagePosition === "right";
   const img = (
-    <div className="shrink-0 w-64 h-56 bg-gray-100 rounded-2xl border border-gray-200 flex items-center justify-center">
-      <div className="w-32 h-32 rounded-xl bg-gray-200" />
+    <div className="shrink-0 w-64 h-56 bg-gray-100 rounded-2xl border border-gray-200 flex items-center justify-center overflow-hidden">
+      {image ? <img src={image} className="w-full h-full object-cover" /> : <div className="w-32 h-32 rounded-xl bg-gray-200" />}
     </div>
   );
   const text = (
@@ -373,7 +373,7 @@ export const BannerSection = ({ text, cta, sectionBg }: Record<string, string>) 
 
 // ─── Gallery ──────────────────────────────────────────────────────────────────
 
-export const GallerySection = ({ heading, subtext, sectionBg }: Record<string, string>) => (
+export const GallerySection = ({ heading, subtext, image1, image2, image3, image4, sectionBg }: Record<string, string>) => (
   <section style={{ background: sectionBg || undefined }} className="px-10 py-14 bg-white">
     <div className="text-center mb-10">
       <EditableText value={heading || "Our Gallery"} propKey="heading" as="h2"
@@ -382,22 +382,22 @@ export const GallerySection = ({ heading, subtext, sectionBg }: Record<string, s
         className="text-gray-400 mt-2 text-sm" />
     </div>
     <div className="grid grid-cols-3 gap-3">
-      <div className="col-span-2 rounded-2xl bg-gray-100 h-56 flex items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl bg-gray-200" />
+      <div className="col-span-2 rounded-2xl bg-gray-100 h-56 flex items-center justify-center overflow-hidden">
+        {image1 ? <img src={image1} className="w-full h-full object-cover" /> : <div className="w-16 h-16 rounded-2xl bg-gray-200" />}
       </div>
       <div className="flex flex-col gap-3">
-        <div className="rounded-2xl bg-gray-100 flex-1 flex items-center justify-center min-h-[100px]">
-          <div className="w-8 h-8 rounded-xl bg-gray-200" />
+        <div className="rounded-2xl bg-gray-100 flex-1 flex items-center justify-center min-h-[100px] overflow-hidden">
+          {image2 ? <img src={image2} className="w-full h-full object-cover" /> : <div className="w-8 h-8 rounded-xl bg-gray-200" />}
         </div>
-        <div className="rounded-2xl bg-gray-100 flex-1 flex items-center justify-center min-h-[100px]">
-          <div className="w-8 h-8 rounded-xl bg-gray-200" />
+        <div className="rounded-2xl bg-gray-100 flex-1 flex items-center justify-center min-h-[100px] overflow-hidden">
+          {image3 ? <img src={image3} className="w-full h-full object-cover" /> : <div className="w-8 h-8 rounded-xl bg-gray-200" />}
         </div>
       </div>
-      <div className="rounded-2xl bg-gray-100 h-36 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-xl bg-gray-200" />
+      <div className="rounded-2xl bg-gray-100 h-36 flex items-center justify-center overflow-hidden">
+        {image4 ? <img src={image4} className="w-full h-full object-cover" /> : <div className="w-8 h-8 rounded-xl bg-gray-200" />}
       </div>
-      <div className="col-span-2 rounded-2xl bg-gray-100 h-36 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-2xl bg-gray-200" />
+      <div className="col-span-2 rounded-2xl bg-gray-100 h-36 flex items-center justify-center overflow-hidden">
+        {image4 ? <img src={image4} className="w-full h-full object-cover" /> : <div className="w-12 h-12 rounded-2xl bg-gray-200" />}
       </div>
     </div>
   </section>

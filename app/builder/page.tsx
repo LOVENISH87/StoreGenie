@@ -13,6 +13,7 @@ import {
   Section, SectionType, SectionRenderer,
   ThemeContext, DEFAULT_THEME, GlobalTheme, InlineEditContext,
 } from "@/components/builder/Blocks";
+import { createClient } from "@/utils/supabase/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,20 +57,20 @@ const LIBRARY: { type: SectionType; label: string; desc: string; defaults: Recor
 
 // ─── Property schemas ─────────────────────────────────────────────────────────
 
-type FieldType = "text" | "textarea" | "select";
+type FieldType = "text" | "textarea" | "select" | "image";
 type Field = { key: string; label: string; type: FieldType; options?: string[] };
 
 const SCHEMAS: Record<SectionType, Field[]> = {
   navbar:       [{ key: "logo", label: "Brand Name", type: "text" }, { key: "links", label: "Nav Links (comma separated)", type: "text" }],
-  hero:         [{ key: "badge", label: "Badge", type: "text" }, { key: "heading", label: "Heading", type: "textarea" }, { key: "subtext", label: "Subtext", type: "textarea" }, { key: "cta", label: "Primary Button", type: "text" }, { key: "ctaSecondary", label: "Secondary Button", type: "text" }],
+  hero:         [{ key: "badge", label: "Badge", type: "text" }, { key: "heading", label: "Heading", type: "textarea" }, { key: "subtext", label: "Subtext", type: "textarea" }, { key: "cta", label: "Primary Button", type: "text" }, { key: "ctaSecondary", label: "Secondary Button", type: "text" }, { key: "image", label: "Hero Image", type: "image" }],
   products:     [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }, { key: "columns", label: "Columns", type: "select", options: ["2", "3", "4"] }],
   features:     [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }],
   testimonials: [{ key: "heading", label: "Heading", type: "text" }],
-  about:        [{ key: "heading", label: "Heading", type: "textarea" }, { key: "body", label: "Body Text", type: "textarea" }, { key: "imagePosition", label: "Image Side", type: "select", options: ["left", "right"] }],
+  about:        [{ key: "heading", label: "Heading", type: "textarea" }, { key: "body", label: "Body Text", type: "textarea" }, { key: "imagePosition", label: "Image Side", type: "select", options: ["left", "right"] }, { key: "image", label: "About Image", type: "image" }],
   contact:      [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }],
   footer:       [{ key: "logo", label: "Brand Name", type: "text" }, { key: "tagline", label: "Tagline", type: "textarea" }],
   banner:       [{ key: "text", label: "Announcement Text", type: "textarea" }, { key: "cta", label: "CTA Text", type: "text" }],
-  gallery:      [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }],
+  gallery:      [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }, { key: "image1", label: "Image 1 (Large)", type: "image" }, { key: "image2", label: "Image 2", type: "image" }, { key: "image3", label: "Image 3", type: "image" }, { key: "image4", label: "Image 4 (Wide)", type: "image" }],
   faq:          [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }],
   pricing:      [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "text" }],
   newsletter:   [{ key: "heading", label: "Heading", type: "text" }, { key: "subtext", label: "Subtext", type: "textarea" }, { key: "placeholder", label: "Input Placeholder", type: "text" }, { key: "cta", label: "Button Text", type: "text" }],
@@ -683,6 +684,20 @@ export default function BuilderPage() {
     setSections(sections.map(s => s.id === id ? { ...s, style: { ...s.style, ...patch } } : s));
   };
 
+  const handleImageUpload = (file: File, id: string, key: string) => {
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        updateProp(id, key, base64String);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Upload failed", err);
+      alert("Failed to process image");
+    }
+  };
+
   // ── Canvas helpers ──
 
   const fitToScreen = useCallback(() => {
@@ -814,11 +829,30 @@ export default function BuilderPage() {
     setShowTemplates(false);
   };
 
-  const handleSave = () => {
-    localStorage.setItem("builder_pages", JSON.stringify(pages));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async (isPublish = false) => {
+    try {
+      setSaved(true);
+      const res = await fetch("/api/builder/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pages, theme, isPublish }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      if (isPublish && data.shopId) {
+        window.open(`/store/${data.shopId}`, "_blank");
+      } else {
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch (err) {
+      console.error(err);
+      setSaved(false);
+      alert("Failed to save layout");
+    }
   };
+
+  const handlePublish = () => handleSave(true);
 
   // ── AI chat (full-page) ──
 
@@ -884,12 +918,16 @@ export default function BuilderPage() {
           </div>
 
           <div className="flex items-center gap-2 w-52 justify-end shrink-0">
-            <button className="h-7 px-3 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Preview</button>
-            <button onClick={handleSave}
+            <button onClick={() => {
+              localStorage.setItem("builder_preview_pages", JSON.stringify(pages));
+              localStorage.setItem("builder_preview_theme", JSON.stringify(theme));
+              window.open("/store/preview", "_blank");
+            }} className="h-7 px-3 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Preview</button>
+            <button onClick={() => handleSave(false)}
               className={`h-7 px-3 text-[11px] font-semibold rounded-md transition-colors ${saved ? "bg-green-50 text-green-600 border border-green-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
               {saved ? "Saved ✓" : "Save"}
             </button>
-            <button className="h-7 px-3 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">Publish</button>
+            <button onClick={handlePublish} className="h-7 px-3 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">Publish</button>
           </div>
         </header>
 
@@ -1163,6 +1201,14 @@ export default function BuilderPage() {
                           ) : field.type === "textarea" ? (
                             <textarea rows={3} value={selectedSection.props[field.key] ?? ""} onChange={e => updateProp(selectedSection.id, field.key, e.target.value)}
                               className="w-full px-2.5 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 outline-none focus:border-blue-400 transition-colors resize-none leading-relaxed" />
+                          ) : field.type === "image" ? (
+                            <div className="flex flex-col gap-2">
+                              {selectedSection.props[field.key] && (
+                                <img src={selectedSection.props[field.key]} className="w-full h-24 object-cover rounded-lg border border-gray-200" />
+                              )}
+                              <input type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], selectedSection.id, field.key)}
+                                className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                            </div>
                           ) : (
                             <input type="text" value={selectedSection.props[field.key] ?? ""} onChange={e => updateProp(selectedSection.id, field.key, e.target.value)}
                               className="w-full h-8 px-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 outline-none focus:border-blue-400 transition-colors" />

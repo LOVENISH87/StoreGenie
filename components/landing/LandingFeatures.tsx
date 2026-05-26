@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as IF from "./icons";
 import { Reveal } from "./motion";
 import BorderGlow from "./BorderGlow";
+import StarBorder from "./StarBorder";
 
 /* ============ TEMPLATES ============ */
 const TEMPLATES = [
@@ -115,6 +116,7 @@ function TemplateCard({ t }: { t: any }) {
 
 /* ============ BUILDER SHOWCASE ============ */
 export function BuilderShowcase() {
+  const router = useRouter();
   return (
     <section id="builder" className="section" style={{ borderTop: "1px solid var(--border)" }}>
       <div className="sg-container">
@@ -130,6 +132,19 @@ export function BuilderShowcase() {
               A real-time visual canvas with multi-breakpoint preview and an inline AI bar that
               redesigns anything you select. Type a vibe — it just works.
             </p>
+          </Reveal>
+          <Reveal delay={3}>
+            <div style={{ marginTop: 24 }}>
+              <StarBorder
+                as="button"
+                onClick={() => router.push('/builder')}
+                color="var(--accent)"
+                speed="3s"
+                thickness={2}
+              >
+                Start building now <IF.ArrowRight size={14} style={{ marginLeft: 6 }} />
+              </StarBorder>
+            </div>
           </Reveal>
         </div>
 
